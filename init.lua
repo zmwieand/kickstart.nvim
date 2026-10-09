@@ -1,5 +1,7 @@
 --[[   
 
+
+
 =====================================================================
 ==================== READ THIS BEFORE CONTINUING ====================
 =====================================================================
@@ -245,7 +247,7 @@ vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower win
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 -- Neovim Tree Toggle Command
-vim.api.nvim_set_keymap('n', '<leader>o', ':NvimTreeToggle<CR>', { noremap = true, silent = true, desc = '[O]pen File Tree' })
+vim.api.nvim_set_keymap('n', '<leader>o', ':Neotree<CR>', { noremap = true, silent = true, desc = '[O]pen File Tree' })
 
 -- Command for markdown task completion
 vim.keymap.set('n', '<leader>tc', function()
@@ -334,94 +336,163 @@ require('lazy').setup({
         topdelete = { text = '‾' },
         changedelete = { text = '~' },
       },
-    },
-  },
-  {
-    'github/copilot.vim',
-  },
-  {
-    'yetone/avante.nvim',
-    event = 'VeryLazy',
-    version = false, -- Never set this value to "*"! Never!
-    opts = {
-      -- add any opts here
-      -- for example
-      provider = 'openai',
-      providers = {
-        openai = {
-          -- endpoint = 'https://api.openai.com/v1',
-          endpoint = 'https://llm-gateway.internal.latest.acvauctions.com/openai/v1',
-          -- model = 'claude-opus-4', -- your desired model (or use gpt-4o, etc.)
-          model = 'google/gemini-2.5-flash-lite', -- your desired model (or use gpt-4o, etc.)
-          -- model = 'claude-3-7-sonnet', -- your desired model (or use gpt-4o, etc.)
-          -- api_type = 'legacy',
-          timeout = 30000, -- Timeout in milliseconds, increase this for reasoning models
-          -- disable_tools = true,
-          extra_request_body = {
-            temperature = 0,
-            max_tokens = 64000, -- Increase this to include reasoning tokens (for reasoning models)
-          },
-          --reasoning_effort = "medium", -- low|medium|high, only used for reasoning models
-        },
-      },
-      mappings = {
-        --- @class AvanteConflictMappings
-        submit = {
-          normal = '<CR>',
-          insert = '<CR>',
-        },
-        cancel = {
-          normal = { '<C-c>', '<Esc>', 'q' },
-          insert = { '<C-c>' },
-        },
-      },
-      windows = {
-        width = 40, -- %
+      signcolumn = true,
+      -- update_debounce = 0,
+      watch_gitdir = {
+        follow_files = false,
       },
     },
-    -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
-    build = 'make',
-    -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
-    dependencies = {
-      'nvim-treesitter/nvim-treesitter',
-      'stevearc/dressing.nvim',
-      'nvim-lua/plenary.nvim',
-      'MunifTanjim/nui.nvim',
-      --- The below dependencies are optional,
-      'echasnovski/mini.pick', -- for file_selector provider mini.pick
-      'nvim-telescope/telescope.nvim', -- for file_selector provider telescope
-      'hrsh7th/nvim-cmp', -- autocompletion for avante commands and mentions
-      'ibhagwan/fzf-lua', -- for file_selector provider fzf
-      'nvim-tree/nvim-web-devicons', -- or echasnovski/mini.icons
-      -- 'zbirenbaum/copilot.lua', -- for providers='copilot'
-      -- 'github/copilot.vim',
-      {
-        -- support for image pasting
-        'HakonHarnes/img-clip.nvim',
-        event = 'VeryLazy',
-        opts = {
-          -- recommended settings
-          default = {
-            embed_image_as_base64 = false,
-            prompt_for_file_name = false,
-            drag_and_drop = {
-              insert_mode = true,
+  },
+
+  -- {
+  --   'github/copilot.vim',
+  -- },
+
+  {
+    'milanglacier/minuet-ai.nvim',
+    config = function()
+      require('minuet').setup {
+        provider = 'openai_fim_compatible',
+        n_completions = 1, -- recommend for local model for resource saving
+        -- I recommend beginning with a small context window size and incrementally
+        -- expanding it, depending on your local computing power. A context window
+        -- of 512, serves as an good starting point to estimate your computing
+        -- power. Once you have a reliable estimate of your local computing power,
+        -- you should adjust the context window to a larger value.
+        context_window = 16384,
+        provider_options = {
+          openai_fim_compatible = {
+            -- For Windows users, TERM may not be present in environment variables.
+            -- Consider using APPDATA instead.
+            api_key = 'TERM',
+            name = 'Ollama',
+            end_point = 'http://192.168.1.55:11434/v1/completions',
+            model = 'qwen2.5-coder:7b',
+            optional = {
+              max_tokens = 56,
+              top_p = 0.9,
             },
-            -- required for Windows users
-            use_absolute_path = true,
           },
         },
-      },
-      {
-        -- Make sure to set this up properly if you have lazy=true
-        'MeanderingProgrammer/render-markdown.nvim',
-        opts = {
-          file_types = { 'markdown', 'Avante' },
+        -- Tab-to-accept, Copilot-style, via the virtual-text frontend
+        virtualtext = {
+          auto_trigger_ft = { '*' }, -- ghost-text suggestions on every filetype as you type
+          keymap = {
+            accept = '<S-Tab>',
+            accept_line = '<C-a>',
+            accept_n_lines = '<C-z>',
+            next = '<C-n>',
+            prev = '<C-p>',
+            dismiss = '<C-d>',
+          },
         },
-        ft = { 'markdown', 'Avante' },
-      },
-    },
+      }
+    end,
   },
+
+  -- {
+  --   'huggingface/llm.nvim',
+  --   opts = {
+  --     -- model = 'google/gemma-4-26b-a4b-it-maas',
+  --     model = 'google/gemini-2.5-flash-lite',
+  --     url = 'https://llm-gateway.internal.internal-development.acvauctions.com/openai/v1/chat/completions', -- llm-ls uses "/api/generate"
+  --     backend = 'openai',
+  --     api_token = 'llm-ls|zwieand@acvauctions.com',
+  --     disable_url_path_completion = true,
+  --     -- request_body = {
+  --     --   -- Modelfile options for the model you use
+  --     --   options = {
+  --     --     temperature = 0.2,
+  --     --     top_p = 0.95,
+  --     --   },
+  --     -- },
+  --   },
+  -- },
+
+  -- {
+  --   'yetone/avante.nvim',
+  --   event = 'VeryLazy',
+  --   version = false, -- Never set this value to "*"! Never!
+  --   opts = {
+  --     -- add any opts here
+  --     -- for example
+  --     provider = 'openai',
+  --     providers = {
+  --       openai = {
+  --         -- endpoint = 'https://api.openai.com/v1',
+  --         endpoint = 'https://llm-gateway.internal.latest.acvauctions.com/openai/v1',
+  --         -- model = 'claude-opus-4', -- your desired model (or use gpt-4o, etc.)
+  --         model = 'google/gemini-2.5-flash-lite', -- your desired model (or use gpt-4o, etc.)
+  --         -- model = 'claude-3-7-sonnet', -- your desired model (or use gpt-4o, etc.)
+  --         -- api_type = 'legacy',
+  --         timeout = 30000, -- Timeout in milliseconds, increase this for reasoning models
+  --         -- disable_tools = true,
+  --         extra_request_body = {
+  --           temperature = 0,
+  --           max_tokens = 64000, -- Increase this to include reasoning tokens (for reasoning models)
+  --         },
+  --         --reasoning_effort = "medium", -- low|medium|high, only used for reasoning models
+  --       },
+  --     },
+  --     mappings = {
+  --       --- @class AvanteConflictMappings
+  --       submit = {
+  --         normal = '<CR>',
+  --         insert = '<CR>',
+  --       },
+  --       cancel = {
+  --         normal = { '<C-c>', '<Esc>', 'q' },
+  --         insert = { '<C-c>' },
+  --       },
+  --     },
+  --     windows = {
+  --       width = 40, -- %
+  --     },
+  --   },
+  --   -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
+  --   build = 'make',
+  --   -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
+  --   dependencies = {
+  --     'nvim-treesitter/nvim-treesitter',
+  --     'stevearc/dressing.nvim',
+  --     'nvim-lua/plenary.nvim',
+  --     'MunifTanjim/nui.nvim',
+  --     --- The below dependencies are optional,
+  --     'echasnovski/mini.pick', -- for file_selector provider mini.pick
+  --     'nvim-telescope/telescope.nvim', -- for file_selector provider telescope
+  --     'hrsh7th/nvim-cmp', -- autocompletion for avante commands and mentions
+  --     'ibhagwan/fzf-lua', -- for file_selector provider fzf
+  --     'nvim-tree/nvim-web-devicons', -- or echasnovski/mini.icons
+  --     -- 'zbirenbaum/copilot.lua', -- for providers='copilot'
+  --     -- 'github/copilot.vim',
+  --     {
+  --       -- support for image pasting
+  --       'HakonHarnes/img-clip.nvim',
+  --       event = 'VeryLazy',
+  --       opts = {
+  --         -- recommended settings
+  --         default = {
+  --           embed_image_as_base64 = false,
+  --           prompt_for_file_name = false,
+  --           drag_and_drop = {
+  --             insert_mode = true,
+  --           },
+  --           -- required for Windows users
+  --           use_absolute_path = true,
+  --         },
+  --       },
+  --     },
+  --     {
+  --       -- Make sure to set this up properly if you have lazy=true
+  --       'MeanderingProgrammer/render-markdown.nvim',
+  --       opts = {
+  --         file_types = { 'markdown', 'Avante' },
+  --       },
+  --       ft = { 'markdown', 'Avante' },
+  --     },
+  --   },
+  -- },
+
   {
     'nvim-tree/nvim-web-devicons',
     config = function()
@@ -435,46 +506,65 @@ require('lazy').setup({
     end,
   },
   {
-    'nvim-tree/nvim-tree.lua',
-    version = '*',
-    lazy = false,
+    'nvim-neo-tree/neo-tree.nvim',
+    branch = 'v3.x',
     dependencies = {
-      'nvim-tree/nvim-web-devicons',
+      'nvim-lua/plenary.nvim',
+      'MunifTanjim/nui.nvim',
+      'nvim-tree/nvim-web-devicons', -- optional, but recommended
     },
-    config = function()
-      require('nvim-tree').setup {
-        renderer = {
-          icons = {
-            web_devicons = {
-              file = {
-                enable = true,
-                color = true,
-              },
-              folder = {
-                enable = true,
-                color = true,
-              },
-            },
-            show = {
-              file = true,
-              folder = true,
-              folder_arrow = false,
-              git = false,
-              modified = false,
-              hidden = false,
-              diagnostics = false,
-              bookmarks = false,
-            },
-            glyphs = {
-              folder = {
-                default = '',
-              },
-            },
-          },
-        },
-      }
-    end,
+    lazy = false, -- neo-tree will lazily load itself
   },
+  -- {
+  --   'nvim-tree/nvim-tree.lua',
+  --   version = '*',
+  --   lazy = false,
+  --   dependencies = {
+  --     'nvim-tree/nvim-web-devicons',
+  --   },
+  --   config = function()
+  --     require('nvim-tree').setup {
+  --       renderer = {
+  --         icons = {
+  --           web_devicons = {
+  --             file = {
+  --               enable = true,
+  --               color = true,
+  --             },
+  --             folder = {
+  --               enable = true,
+  --               color = true,
+  --             },
+  --           },
+  --           show = {
+  --             file = true,
+  --             folder = true,
+  --             folder_arrow = false,
+  --             git = false,
+  --             modified = false,
+  --             hidden = false,
+  --             diagnostics = false,
+  --             bookmarks = false,
+  --           },
+  --           glyphs = {
+  --             folder = {
+  --               default = '',
+  --             },
+  --           },
+  --         },
+  --       },
+  --       filesystem_watchers = {
+  --         enable = true,
+  --         debounce_delay = 50,
+  --         ignore_dirs = {
+  --           'node_modules',
+  --           '.git',
+  --           '.github',
+  --         },
+  --       },
+  --     }
+  --   end,
+  -- },
 
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
